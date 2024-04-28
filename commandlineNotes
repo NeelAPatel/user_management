@@ -1,0 +1,57 @@
+- fork
+- add dockerhub username + dockertoken to repo
+- configure mailtrap.io username/pass in .env file
+
+
+# Basic Initial Steps
+1. Terminal 1: `docker compose up --build`
+2. Terminal 2: `docker compose logs fastapi -f`
+3. `localhost:5050/login` > Create server: 
+- new server: 
+  -  Name = myapp
+- Connections Tab
+  - hostname = `postgres`
+  - port: `5432`
+  - maintenancedatabase: `myappdb`
+  - username: `user`
+  - password: `password`
+  - save password: `yes`
+4. Terminal 3, pytest: `docker compose exec fastapi pytest`
+5. `docker compose exec fastapi alembic upgrade head`
+  - three lines should show up here, confirming the 'initial migration' 
+  - refresh pgadmin tables
+
+
+# Other commands: 
+### starts in background
+docker compose up --build -d
+
+### starts in foreground
+- docker compose up --build
+
+### forces to stay in foreground and keep showing new logs
+- docker compose logs fastapi -f
+- ctrl c to get out
+
+### prints copy of logs at the time
+- docker compose logs fastapi
+
+### Pytest
+- docker compose exec fastapi pytest
+
+### alembic
+- docker compose exec fastapi alembic upgrade
+- docker compose exec fastapi alembic upgrade head
+--- ensure 3 lines are shown, including initial migration
+
+
+--- ensure alembic table doesnt exist
+- go to localhost:5050/ --> login to pgadmin
+
+
+
+
+
+
+
+
