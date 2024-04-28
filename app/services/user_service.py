@@ -69,12 +69,14 @@ class UserService:
             if new_user.role == UserRole.ADMIN:
                 new_user.email_verified = True
 
-            else:
-                new_user.verification_token = generate_verification_token()
-                await email_service.send_verification_email(new_user)
-
+            #else:
+                # Error 1: new_user's user_id cannot be generated until it is processed into database
+                # new_user.verification_token = generate_verification_token()
+                # await email_service.send_verification_email(new_user) # Move to Line 79
+            new_user.verification_token = generate_verification_token()
             session.add(new_user)
             await session.commit()
+            await email_service.send_verification_email(new_user) # Moved from 75
             return new_user
         except ValidationError as e:
             logger.error(f"Validation error during user creation: {e}")
