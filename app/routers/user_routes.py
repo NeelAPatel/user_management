@@ -68,6 +68,7 @@ async def get_user(user_id: UUID, request: Request, db: AsyncSession = Depends(g
         last_login_at=user.last_login_at,
         created_at=user.created_at,
         updated_at=user.updated_at,
+        is_professional = user.is_professional,
         links=create_user_links(user.id, request)  
     )
 
