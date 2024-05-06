@@ -22,6 +22,12 @@
   - refresh pgadmin tables
 
 
+        PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+      PGADMIN_LISTEN_PORT: 80
+    depends_on:
+
+
 # Other commands: 
 ### starts in background
 docker compose up --build -d
@@ -55,3 +61,4 @@ docker compose up --build -d
 
 
 
+docker stop $(docker ps -aq) && docker rm $(docker ps -aq) && docker volume rm $(docker volume ls -q)
