@@ -29,7 +29,13 @@ class UserBase(BaseModel):
     role: UserRole
 
     _validate_urls = validator('profile_picture_url', 'linkedin_profile_url', 'github_profile_url', pre=True, allow_reuse=True)(validate_url)
- 
+    
+
+    @validator('email')
+    def validate_email(cls, v): 
+        lowercase_email = v.lower()
+        return lowercase_email
+
     class Config:
         from_attributes = True
 
