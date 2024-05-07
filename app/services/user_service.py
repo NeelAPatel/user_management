@@ -242,3 +242,30 @@ class UserService:
             await session.commit()
             return True
         return False
+
+    @classmethod
+    async def field_update_is_professional(cls, session: AsyncSession, user_id: UUID, is_professional: bool, email_service: EmailService) -> Optional[User]:
+        try:
+            #SQL Execution query
+            query = update(User).where(User.id == user_id).values(is_professional=is_professional).execution_options(synchronize_session="fetch")
+            await cls._execute_query(session, query)
+            updated_user = await cls.get_by_id(session, user_id)
+
+            if updated_user:
+                #Ensure browsing session has an updated value of the user
+                session.refresh(updated_user)
+                logger.info(f"User {user_id} has updated their 'is_professional' value.")
+
+                #Send email update
+                try:
+                    await email_service.send_professional_status_update_email(updated_user)
+                except Exception as e:
+                    logger.error(f"Error: Unable to send 'is_professional' value update email: {e}.")
+                return updated_user
+            
+            else:
+                logger.error(f"User {user_id} not found after updating their 'is_professional' value.")
+            return None
+        except Exception as e:
+            logger.error(f"Error during updating 'is_professional' value: {e}")
+            return None
