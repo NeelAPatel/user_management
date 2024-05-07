@@ -247,13 +247,12 @@ async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get
         return {"message": "Email verified successfully"}
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
 
-# @router.put("/update-profile", response_model=UserResponse, name="update_profile", tags=["User Profile Management"])
-# async def update_profile(user_update: UserUpdate, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER", "AUTHENTICATED"]))):
+
 @router.put("/update-user-profile/{user_id}", response_model=UserResponse, name="update_user_profile", tags=["[New] User Profile Management"])
 async def update_profile(user_update: UpdatedUserProfile, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER", "AUTHENTICATED"]))):
     """
     Update the currently logged in user's profile details. Given JSON object, route will search search for the current user and replace fields with data provided.
-    If field is not given in JSON object, it will keep field as is. 
+    The Role of the user is not updatable. 
 
     - **nickname**: nickname of the current user
     - **email**: email of the current user
@@ -274,17 +273,14 @@ async def update_profile(user_update: UpdatedUserProfile, request: Request, db: 
     user_email = current_user_info['user_id']
     current_user_data = await UserService.get_by_email(db, user_email)
 
-
-    # Failsafes
+    # Fail safes
     if not current_user_data: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
 
     #user_update parameter = user's new JSON input
     updated_user_data = user_update.model_dump(exclude_unset=True)
     updated_user = await UserService.update2(db, current_user_data.id, updated_user_data)
     
-
     #Response it shows on the webpage
     return UserResponse.model_construct(
         id=updated_user.id,
@@ -334,7 +330,7 @@ async def update_is_professional(user_id: UUID, is_professional: bool, request: 
         profile_picture_url=updated_user.profile_picture_url,
         github_profile_url=updated_user.github_profile_url,
         linkedin_profile_url=updated_user.linkedin_profile_url,
-        role=updated_user.role,
+        #role=updated_user.role,
         email=updated_user.email,
         last_login_at=updated_user.last_login_at,
         created_at=updated_user.created_at,

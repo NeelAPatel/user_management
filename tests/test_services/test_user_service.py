@@ -226,7 +226,7 @@ async def test_register_no_duplicate_email_with_caseinsensitivity(db_session, em
     new_user = await UserService.register_user(db_session, dummy_data_2, email_service)
     assert new_user is None
 
-# Test fetching a user by ID when the user exists
+# Test to ensure fetching a user by ID when the user exists
 async def test_get_by_id_user_is_professional(db_session, user):
     retrieved_user = await UserService.get_by_id(db_session, user.id)
     assert retrieved_user.is_professional == user.is_professional

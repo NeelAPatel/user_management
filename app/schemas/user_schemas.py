@@ -18,11 +18,11 @@ def validate_url(url: Optional[str]) -> Optional[str]:
     return url
 
 class UserBase(BaseModel):
-    email: EmailStr = Field(..., example="john.doe@example.com")
-    nickname: Optional[str] = Field(None, min_length=3, pattern=r'^[\w-]+$', example=generate_nickname())
-    first_name: Optional[str] = Field(None, example="John")
-    last_name: Optional[str] = Field(None, example="Doe")
-    bio: Optional[str] = Field(None, example="Experienced software developer specializing in web applications.")
+    email: EmailStr = Field(..., max_length=200,  example="john.doe@example.com")
+    nickname: Optional[str] = Field(None, min_length=3,max_length=200, pattern=r'^[\w-]+$', example=generate_nickname())
+    first_name: Optional[str] = Field(None, min_length=1, max_length=200, example="John")
+    last_name: Optional[str] = Field(None, min_length=1, max_length=200, example="Doe")
+    bio: Optional[str] = Field(None, max_length=1000,example="Experienced software developer specializing in web applications.")
     profile_picture_url: Optional[str] = Field(None, example="https://example.com/profiles/john.jpg")
     linkedin_profile_url: Optional[str] =Field(None, example="https://linkedin.com/in/johndoe")
     github_profile_url: Optional[str] = Field(None, example="https://github.com/johndoe")
