@@ -108,3 +108,60 @@ def test_user_base_url_invalid(url, user_base_data):
     user_base_data["profile_picture_url"] = url
     with pytest.raises(ValidationError):
         UserBase(**user_base_data)
+
+# Test to ensure min limit for nickname is met
+@pytest.mark.parametrize("nickname", ["test user", "test?user", "", "XX"])
+def test_user_base_nickname_invalid_min_limit(nickname, user_base_data):
+    user_base_data["nickname"] = nickname
+    if len(nickname) < 3 and nickname != "":  # Expect ValidationError only for non-empty strings below min length
+        with pytest.raises(ValidationError):
+            UserBase(**user_base_data)
+
+# Test to ensure min limit for firstname is met
+@pytest.mark.parametrize("first_name", [""])  # Include one valid and two invalid lengths
+def test_user_base_firstname_invalid_min_limit(first_name, user_base_data):
+    user_base_data["first_name"] = first_name
+    if len(first_name) < 1:  # Expecting a ValidationError only for strings longer than 200 characters
+        with pytest.raises(ValidationError):
+            UserBase(**user_base_data)
+
+# Test to ensure min limit for lastname is met
+@pytest.mark.parametrize("last_name", [""])  # Include one valid and two invalid lengths
+def test_user_base_lastname_invalid_min_limit(last_name, user_base_data):
+    user_base_data["last_name"] = last_name
+    if len(last_name) < 1:  # Expecting a ValidationError only for strings longer than 200 characters
+        with pytest.raises(ValidationError):
+            UserBase(**user_base_data)
+
+
+# Test to ensure max limit for nickname is met
+@pytest.mark.parametrize("nickname", ["test user", "test?!user", "", "MaxNM"*2*101])
+def test_user_base_nickname_invalid_max_limit(nickname, user_base_data):
+    user_base_data["nickname"] = nickname
+    with pytest.raises(ValidationError):
+        UserBase(**user_base_data)
+
+# Test to ensure max limit for firstname is met
+@pytest.mark.parametrize("first_name", ["a" * 201])  # Include one valid and two invalid lengths
+def test_user_base_firstname_invalid_max_limit(first_name, user_base_data):
+    user_base_data["first_name"] = first_name
+    if len(first_name) > 200:  # Expecting a ValidationError only for strings longer than 200 characters
+        with pytest.raises(ValidationError):
+            UserBase(**user_base_data)
+
+# Test to ensure max limit for lastname is met
+@pytest.mark.parametrize("last_name", ["a" * 201])  # Include one valid and two invalid lengths
+def test_user_base_lastname_invalid_max_limit(last_name, user_base_data):
+    user_base_data["last_name"] = last_name
+    if len(last_name) > 200:  # Expecting a ValidationError only for strings longer than 200 characters
+        with pytest.raises(ValidationError):
+            UserBase(**user_base_data)
+
+
+# Test to ensure max limit for biography is met
+@pytest.mark.parametrize("bio", ["", "a" * 1001])  # Include one valid and two invalid lengths
+def test_user_base_lastname_invalid_max_limit(bio, user_base_data):
+    user_base_data["bio"] = bio
+    if len(bio) > 1000:  # Expecting a ValidationError only for strings longer than 200 characters
+        with pytest.raises(ValidationError):
+            UserBase(**user_base_data)
