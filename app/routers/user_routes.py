@@ -27,7 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_current_user, get_db, get_email_service, require_role
 from app.schemas.pagination_schema import EnhancedPagination
 from app.schemas.token_schema import TokenResponse
-from app.schemas.user_schemas import LoginRequest, UserBase, UserCreate, UserListResponse, UserResponse, UserUpdate
+from app.schemas.user_schemas import LoginRequest, UserBase, UserCreate, UserListResponse, UserResponse, UserUpdate, UpdatedUserProfile
 from app.services.user_service import UserService
 from app.services.jwt_service import create_access_token
 from app.utils.link_generation import create_user_links, generate_pagination_links
@@ -250,7 +250,7 @@ async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get
 # @router.put("/update-profile", response_model=UserResponse, name="update_profile", tags=["User Profile Management"])
 # async def update_profile(user_update: UserUpdate, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER", "AUTHENTICATED"]))):
 @router.put("/update-user-profile/{user_id}", response_model=UserResponse, name="update_user_profile", tags=["[New] User Profile Management"])
-async def update_profile(user_update: UserUpdate, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER", "AUTHENTICATED"]))):
+async def update_profile(user_update: UpdatedUserProfile, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER", "AUTHENTICATED"]))):
     """
     Update the currently logged in user's profile details. Given JSON object, route will search search for the current user and replace fields with data provided.
     If field is not given in JSON object, it will keep field as is. 
@@ -282,11 +282,12 @@ async def update_profile(user_update: UserUpdate, request: Request, db: AsyncSes
 
     #user_update parameter = user's new JSON input
     updated_user_data = user_update.model_dump(exclude_unset=True)
-    updated_user = await UserService.update(db, current_user_data.id, updated_user_data)
+    updated_user = await UserService.update2(db, current_user_data.id, updated_user_data)
     
-    
+
+    #Response it shows on the webpage
     return UserResponse.model_construct(
-        # id=updated_user.id,
+        id=updated_user.id,
         nickname=updated_user.nickname,
         email=updated_user.email,
         first_name=updated_user.first_name,
@@ -295,13 +296,48 @@ async def update_profile(user_update: UserUpdate, request: Request, db: AsyncSes
         profile_picture_url=updated_user.profile_picture_url,
         linkedin_profile_url=updated_user.linkedin_profile_url,
         github_profile_url=updated_user.github_profile_url,
+        role=current_user_data.role,
         # role=updated_user.role,
-        # is_professional=updated_user.is_professional,
-        #prof status updated at
-        # last_login_at=updated_user.last_login_at,
-        # created_at=updated_user.created_at,
-        # updated_at=updated_user.updated_at,
+        is_professional=updated_user.is_professional,
+        last_login_at=updated_user.last_login_at,
+        created_at=updated_user.created_at,
+        updated_at=updated_user.updated_at,
         
         links=create_user_links(updated_user.id, request)
     )
 
+
+@router.put("/users/{user_id}/set-professional/{is_professional}", response_model=UserResponse, name="set_Is__professional_Value", tags=["[New] User Profile Management"])
+async def update_is_professional(user_id: UUID, is_professional: bool, request: Request, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme), current_user: dict = Depends(require_role(["ADMIN", "MANAGER"])), email_service: EmailService = Depends(get_email_service)):
+    """
+    Update a specific user's is_professional field by their ID.
+    - **user_id**: UUID of the user.
+    - **is_professional**: Value for is_professional field.
+    """
+    
+    #Get specific user by user_id value
+    target_user = await UserService.get_by_id(db, user_id)
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    updated_user = await UserService.field_update_is_professional(db, user_id, is_professional, email_service)
+
+
+    #Response it should show on webpage
+    return UserResponse.model_construct(
+        is_professional=updated_user.is_professional,
+        id=updated_user.id,
+        nickname=updated_user.nickname,
+        first_name=updated_user.first_name,
+        last_name=updated_user.last_name,
+        bio=updated_user.bio,
+        profile_picture_url=updated_user.profile_picture_url,
+        github_profile_url=updated_user.github_profile_url,
+        linkedin_profile_url=updated_user.linkedin_profile_url,
+        role=updated_user.role,
+        email=updated_user.email,
+        last_login_at=updated_user.last_login_at,
+        created_at=updated_user.created_at,
+        updated_at=updated_user.updated_at,
+        links=create_user_links(updated_user.id, request)  
+    )

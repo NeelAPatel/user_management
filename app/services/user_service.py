@@ -112,6 +112,38 @@ class UserService:
             return None
 
     @classmethod
+    async def update2(cls, session: AsyncSession, user_id: UUID, update_data: Dict[str, str]) -> Optional[User]:
+        try:
+            # validated_data = UserUpdate(**update_data).dict(exclude_unset=True)
+            validated_data = UserUpdate(**update_data).model_dump(exclude_unset=True)
+
+            # Remove 'role' key from validated_data if it exists
+            if 'role' in validated_data:
+                #Ensure they cannot update role by themself
+                logger.warning(f"Attempt to update 'role' for User {user_id} detected and blocked.")
+                validated_data.pop('role')
+
+
+            if 'password' in validated_data:
+                validated_data['hashed_password'] = hash_password(validated_data.pop('password'))
+            
+            #SQL query update object
+            query = update(User).where(User.id == user_id).values(**validated_data).execution_options(synchronize_session="fetch")
+
+            await cls._execute_query(session, query)
+            updated_user = await cls.get_by_id(session, user_id)
+            if updated_user:
+                session.refresh(updated_user)  # Explicitly refresh the updated user object
+                logger.info(f"User {user_id} updated successfully.")
+                return updated_user
+            else:
+                logger.error(f"User {user_id} not found after update attempt.")
+            return None
+        except Exception as e:  # Broad exception handling for debugging
+            logger.error(f"Error during user update: {e}")
+            return None
+
+    @classmethod
     async def delete(cls, session: AsyncSession, user_id: UUID) -> bool:
         user = await cls.get_by_id(session, user_id)
         if not user:
